@@ -1,5 +1,4 @@
 import glob
-
 from ulauncher.api.client.Extension import Extension
 from ulauncher.api.client.EventListener import EventListener
 from ulauncher.api.shared.event import KeywordQueryEvent, ItemEnterEvent, PreferencesUpdateEvent, PreferencesEvent
@@ -74,14 +73,41 @@ class SshExtension(Extension):
         return hosts
 
     def launch_terminal(self, addr):
-        logger.debug("Launching connection " + addr)
-        shell = os.environ["SHELL"]
-        home = expanduser("~")
+        try:
+            print(f"Starting SSH connection to: {addr}")
+            home = expanduser("~")
+            
+            # Yerel tmux oturum adını host'tan oluştur
+            local_session = re.sub(r'[^a-zA-Z0-9_-]', '_', addr)
+            
+            # Uzak byobu komutu (her zaman 'kenan' olacak)
+            remote_cmd = 'byobu has -t kenan || byobu new-session -d -s kenan && byobu a -t kenan'
+            ssh_cmd = f'ssh {addr} -t \'{remote_cmd}\''
+            
+            # Tmux komutunu oluştur
+            tmux_create_cmd = f'tmux new-session -d -s {local_session} 2>/dev/null || true'
+            tmux_send_cmd = f'tmux send-keys -t {local_session} "{ssh_cmd}" ENTER'
+            tmux_attach_cmd = f'tmux attach-session -t {local_session}'
+            
+            # Tüm komutları birleştir
+            full_script = f'{tmux_create_cmd}; {tmux_send_cmd}; {tmux_attach_cmd}'
+            
+            full_cmd = [
+                self.terminal,
+                'env',
+                'TERM=xterm-256color',
+                'bash',
+                '-c',
+                full_script
+            ]
+            
+            print(f"Executing command: {' '.join(full_cmd)}")
+            subprocess.Popen(full_cmd, cwd=home)
+                
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            logger.error(f"Error launching terminal: {str(e)}")
 
-        cmd = self.terminal_cmd.replace("%SHELL", shell).replace("%CONN", addr)
-
-        if self.terminal:
-            subprocess.Popen([self.terminal, self.terminal_arg, cmd], cwd=home)
 
 class ItemEnterEventListener(EventListener):
 
@@ -89,10 +115,10 @@ class ItemEnterEventListener(EventListener):
         data = event.get_data()
         extension.launch_terminal(data)
 
+
 class PreferencesUpdateEventListener(EventListener):
 
     def on_event(self, event, extension):
-
         if event.id == "ssh_launcher_terminal":
             extension.terminal = event.new_value
         elif event.id == "ssh_launcher_terminal_arg":
@@ -101,6 +127,9 @@ class PreferencesUpdateEventListener(EventListener):
             extension.terminal_cmd = event.new_value
         elif event.id == "ssh_launcher_use_known_hosts":
             extension.use_known_hosts = event.new_value
+        elif event.id == "ssh_launcher_byobu_session":
+            extension.byobu_session = event.new_value
+
 
 class PreferencesEventListener(EventListener):
 
@@ -109,6 +138,8 @@ class PreferencesEventListener(EventListener):
         extension.terminal_arg = event.preferences["ssh_launcher_terminal_arg"]
         extension.terminal_cmd = event.preferences["ssh_launcher_terminal_cmd"]
         extension.use_known_hosts = event.preferences["ssh_launcher_use_known_hosts"]
+        extension.byobu_session = event.preferences.get("ssh_launcher_byobu_session", "")
+
 
 class KeywordQueryEventListener(EventListener):
 
@@ -140,6 +171,7 @@ class KeywordQueryEventListener(EventListener):
                                             on_enter=ExtensionCustomAction(arg, keep_app_open=False)))
 
         return RenderResultListAction(items)
+
 
 if __name__ == '__main__':
     SshExtension().run()

@@ -1,57 +1,55 @@
 {
-  "required_api_version": "^2.0.0",
-  "name": "SSH Launcher",
-  "description": "Launch SSH connections.",
-  "developer_name": "Jonas Bendlin",
-  "icon": "images/icon.png",
-  "options": {
-	"query_debounce": 0.1
-  },
-  "preferences": [
-	{
-	  "id": "ssh_launcher_kw",
-	  "type": "keyword",
-	  "name": "SSH Launcher",
-	  "description": "",
-	  "default_value": "ssh"
-	},
-	{
-		"id": "ssh_launcher_terminal",
-		"type": "input",
-		"name": "Terminal",
-		"description": "The Terminal to launch the connections in.",
-		"default_value": "xterm"
-	},
-	{
-		"id": "ssh_launcher_terminal_arg",
-		"type": "input",
-		"name": "Terminal arg",
-		"description": "Terminal arg to exec commands.",
-		"default_value": "-e"
-	},
-	{
-		"id": "ssh_launcher_terminal_cmd",
-		"type": "input",
-		"name": "Terminal cmd",
-		"description": "The command to start the terminal with. %SHELL equals the env var $SHELL and %CONN the selected connection.",
-		"default_value": "%SHELL -c 'ssh \"%CONN\"';%SHELL"
-	},
-	{
-		"id": "ssh_launcher_use_known_hosts",
-		"type": "select",
-		"name": "Use known_hosts",
-		"description": "Parse the ~/.ssh/known_hosts file for more suggestions.",
-		"options": [
-			{
-				"value": "True",
-				"text": "Yes"
-			},
-			{
-				"value": "False",
-				"text": "No"
-			}
-		],
-		"default_value": "True"
-	}
-  ]
+   "required_api_version": "^2.0.0",
+   "name": "SSH Launcher",
+   "description": "Launch SSH connections with local tmux session and remote byobu integration",
+   "developer_name": "Kenan Pelit",
+   "icon": "images/icon.png",
+   "options": {
+       "query_debounce": 0.1
+   },
+   "preferences": [
+       {
+           "id": "ssh_launcher_keyword",
+           "type": "keyword",
+           "name": "SSH Launcher keyword",
+           "description": "SSH Launcher keyword",
+           "default_value": "ssh"
+       },
+       {
+           "id": "ssh_launcher_terminal",
+           "type": "input",
+           "name": "Terminal",
+           "description": "Terminal emulator to use (e.g. /usr/bin/foot)",
+           "default_value": "/usr/bin/foot"
+       },
+       {
+           "id": "ssh_launcher_terminal_arg",
+           "type": "input",
+           "name": "Terminal arg",
+           "description": "Terminal argument for command execution (-e for most terminals)",
+           "default_value": "-e"
+       },
+       {
+           "id": "ssh_launcher_terminal_cmd",
+           "type": "input",
+           "name": "Terminal cmd",
+           "description": "Leave empty to use the built-in tmux+byobu integration",
+           "default_value": ""
+       },
+       {
+           "id": "ssh_launcher_use_known_hosts",
+           "type": "select",
+           "name": "Use known_hosts",
+           "description": "Add suggestions from ~/.ssh/known_hosts file",
+           "default_value": "Yes",
+           "options": ["Yes", "No"]
+       },
+       {
+           "id": "ssh_launcher_byobu_session",
+           "type": "input",
+           "name": "Remote byobu session",
+           "description": "Name of byobu/tmux session to use on remote server (default: kenan)",
+           "default_value": "kenan"
+       }
+   ]
 }
